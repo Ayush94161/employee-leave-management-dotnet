@@ -27,7 +27,7 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                bat 'curl --retry 10 --retry-delay 5 --retry-connrefused -f http://localhost:5000/health'
+               bat 'curl --retry 12 --retry-delay 5 --retry-all-errors -f http://localhost:5000/health'
             }
         }
     }
