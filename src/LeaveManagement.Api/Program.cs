@@ -3,16 +3,25 @@ using System.Text.Json.Serialization;
 using LeaveManagement.Api.Data;
 using LeaveManagement.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
-Directory.CreateDirectory(Path.Combine(builder.Environment.ContentRootPath, "data"));
+
+var connectionBuilder = new SqliteConnectionStringBuilder(
+    builder.Configuration.GetConnectionString("Default") ?? "Data Source=data/leave-management.db");
+if (!Path.IsPathRooted(connectionBuilder.DataSource))
+{
+    connectionBuilder.DataSource = Path.Combine(builder.Environment.ContentRootPath, connectionBuilder.DataSource);
+}
+Directory.CreateDirectory(Path.GetDirectoryName(connectionBuilder.DataSource)!);
+
 builder.Services.AddControllers().AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
-builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlite(builder.Configuration.GetConnectionString("Default")));
+builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlite(connectionBuilder.ConnectionString));
 builder.Services.AddScoped<ITokenService, TokenService>();
 var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT key is missing");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
