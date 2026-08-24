@@ -9,7 +9,7 @@ RUN dotnet restore
 
 COPY . .
 
-RUN mkdir -p /src/data
+ENV ConnectionStrings__Default="Data Source=/tmp/leave-management-tests.db"
 RUN dotnet test -c Release --no-restore
 RUN dotnet publish src/LeaveManagement.Api/LeaveManagement.Api.csproj \
     -c Release -o /app/publish --no-restore
